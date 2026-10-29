@@ -45,9 +45,10 @@ def current_compensation_subquery() -> Subquery:
             ranked.c.pay_frequency,
             ranked.c.effective_date,
             Country.currency_code,
-            (annual_base_local * rate).label("annual_base_usd"),
-            (ranked.c.bonus * rate).label("bonus_usd"),
-            ((annual_base_local + ranked.c.bonus) * rate).label("total_comp_usd"),
+            # Rounded to cents so range filters are not skewed by float artefacts.
+            func.round(annual_base_local * rate, 2).label("annual_base_usd"),
+            func.round(ranked.c.bonus * rate, 2).label("bonus_usd"),
+            func.round((annual_base_local + ranked.c.bonus) * rate, 2).label("total_comp_usd"),
         )
         .join(Employee, Employee.id == ranked.c.employee_id)
         .join(Country, Country.id == Employee.country_id)

@@ -92,7 +92,7 @@ def grouped(
 def _median(db: Session, filters: EmployeeFilters, measure: Measure, group_by: GroupBy | None) -> list[tuple[object, str, float]]:
     """Median via window functions (SQLite has no MEDIAN aggregate).
 
-    Averages the middle one or two rows; relies on integer division of the row count.
+    Averages the middle one or two rows of each partition.
     """
     key, label = _group_columns(group_by) if group_by else (None, None)
 
@@ -110,7 +110,7 @@ def _median(db: Session, filters: EmployeeFilters, measure: Measure, group_by: G
 
     inner, _ = _base(columns, filters, salaried_only=True)
     ranked = inner.subquery()
-    middle = ranked.c.rn.in_([(ranked.c.cnt + 1) / 2, (ranked.c.cnt + 2) / 2])
+    middle = ranked.c.rn.in_([(ranked.c.cnt + 1) // 2, (ranked.c.cnt + 2) // 2])
     if group_by:
         stmt = select(ranked.c.gkey, ranked.c.glabel, func.avg(ranked.c.value)).where(middle).group_by(ranked.c.gkey, ranked.c.glabel)
         return [(k, str(lbl), round(float(v), 2)) for k, lbl, v in db.execute(stmt)]

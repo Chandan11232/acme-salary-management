@@ -30,6 +30,8 @@ def _employee_with_comp_query() -> tuple[Select, object]:
         .join(Employee.country)
         .outerjoin(comp, comp.c.employee_id == Employee.id)
         .options(contains_eager(Employee.department), contains_eager(Employee.country))
+        # Refresh relationships of already-loaded instances (e.g. right after an update).
+        .execution_options(populate_existing=True)
     )
     return stmt, comp
 
