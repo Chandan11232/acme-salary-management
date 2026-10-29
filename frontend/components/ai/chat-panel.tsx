@@ -7,6 +7,7 @@ import { AnswerTable } from "@/components/ai/answer-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { formatCount, formatUsd } from "@/lib/format";
 import type { AIAnswer } from "@/lib/types";
 
 type Message = { id: number; role: "user"; text: string } | { id: number; role: "assistant"; answer: AIAnswer } | { id: number; role: "error"; text: string };
@@ -69,20 +70,22 @@ export function ChatPanel() {
         {messages.length === 0 ? (
           <div className="flex h-full flex-col justify-center">
             <p className="eyebrow mb-4 text-[#fffef8]/60">Try one of these</p>
-            <ul className="divide-y divide-[#fffef8]/10 border-y border-[#fffef8]/10">
-              {SUGGESTIONS.map((s) => (
-                <li key={s}>
-                  <button
-                    type="button"
-                    onClick={() => ask(s)}
-                    className="group flex w-full items-center justify-between gap-4 py-2.5 text-left text-sm text-[#fffef8]/85 transition-colors hover:text-orange"
-                  >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {SUGGESTIONS.map((s, i) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => ask(s)}
+                  className="group flex min-h-24 flex-col justify-between rounded-sm border border-[#fffef8]/15 bg-[#fffef8]/[0.04] p-3.5 text-left transition-colors hover:border-orange hover:bg-[#fffef8]/[0.08]"
+                >
+                  <span className="eyebrow text-[10px] text-orange">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="mt-2 flex items-end justify-between gap-3 text-sm text-[#fffef8]/90">
                     {s}
-                    <ArrowRightIcon className="size-4 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </button>
-                </li>
+                    <ArrowRightIcon className="size-4 shrink-0 opacity-40 transition-all group-hover:translate-x-0.5 group-hover:text-orange group-hover:opacity-100" />
+                  </span>
+                </button>
               ))}
-            </ul>
+            </div>
           </div>
         ) : (
           <div className="space-y-5">
@@ -100,6 +103,11 @@ export function ChatPanel() {
                 </div>
               ) : (
                 <div key={message.id} className="max-w-[92%] border-l-2 border-orange pl-4">
+                  {message.answer.value !== null && (
+                    <p className="headline mb-2 text-4xl text-orange tabular-nums">
+                      {message.answer.unit === "count" ? formatCount(message.answer.value) : formatUsd(message.answer.value)}
+                    </p>
+                  )}
                   <p className="text-[15px] leading-relaxed text-[#fffef8]">{message.answer.answer}</p>
                   {message.answer.table && <AnswerTable table={message.answer.table} unit={message.answer.unit} />}
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
