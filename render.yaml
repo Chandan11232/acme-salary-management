@@ -1,0 +1,17 @@
+# Render Blueprint for the FastAPI backend (https://render.com/docs/blueprint-spec).
+# The free plan has an ephemeral disk, so the start command seeds the 10,000
+# employees on every boot (~1s; skipped if the database already has data).
+services:
+  - type: web
+    name: acme-pay-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ANTHROPIC_API_KEY
+        sync: false # optional; set in the dashboard to enable Claude parsing
