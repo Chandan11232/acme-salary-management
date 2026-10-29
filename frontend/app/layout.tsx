@@ -12,7 +12,7 @@ const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["lati
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"], weight: ["500", "600"] });
 
 export const metadata: Metadata = {
-  title: "ACME Compensation",
+  title: "ACME Pay",
   description: "Employee salary management and analytics for ACME Corp HR",
 };
 

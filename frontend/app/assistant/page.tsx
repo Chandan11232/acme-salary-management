@@ -1,6 +1,6 @@
 import { ChatPanel } from "@/components/ai/chat-panel";
 
-export const metadata = { title: "AI Assistant · ACME Compensation" };
+export const metadata = { title: "AI Assistant · ACME Pay" };
 
 export default function AssistantPage() {
   return (

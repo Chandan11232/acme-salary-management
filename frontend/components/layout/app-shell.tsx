@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { Logo } from "@/components/layout/logo";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/employees", label: "Employees" },
-  { href: "/assistant", label: "AI Assistant" },
+  { href: "/assistant", label: "Ask AI" },
 ];
+
+const WRAP = "mx-auto w-[min(1240px,calc(100%-32px))]";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -19,30 +22,30 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="grid size-7 place-items-center rounded-md bg-primary text-xs font-bold text-primary-foreground">A</span>
-            <span className="hidden sm:inline">ACME Compensation</span>
-          </Link>
-          <nav className="flex flex-1 gap-1">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  isActive(item.href) ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      <header className={cn(WRAP, "flex items-center justify-between gap-6 border-b py-5")}>
+        <Logo />
+        <nav className="flex items-center gap-1 sm:gap-6">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(item.href) ? "page" : undefined}
+              className={cn(
+                "border-b-[1.5px] px-2 py-1 text-sm font-medium transition-colors sm:px-0",
+                isActive(item.href) ? "border-ink text-foreground" : "border-transparent text-muted-foreground hover:text-orange-deep",
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
           <ThemeToggle />
-        </div>
+        </nav>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">{children}</main>
+      <main className={cn(WRAP, "flex-1 py-10")}>{children}</main>
+      <footer className={cn(WRAP, "flex flex-wrap justify-between gap-2 border-t py-8 text-xs text-muted-foreground")}>
+        <span>ACME Pay · Salary management for 10,000 people across 6 countries</span>
+        <span className="eyebrow">All figures annual · USD</span>
+      </footer>
     </div>
   );
 }
