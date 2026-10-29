@@ -1,14 +1,21 @@
 """Compensation aggregates computed in SQL. All money values are annual USD."""
 
 from collections.abc import Callable
+from dataclasses import replace
 from enum import StrEnum
 
-from sqlalchemy import ColumnElement, Select, Subquery, func, select
+from sqlalchemy import ColumnElement, Select, Subquery, Table, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Country, Department, Employee
 from app.schemas.analytics import AnalyticsSummary, GroupBreakdown
-from app.services.compensation import Measure, current_compensation_subquery, measure_column
+from app.services.compensation import (
+    Measure,
+    current_compensation_subquery,
+    drop_snapshot,
+    measure_column,
+    snapshot_current_compensation,
+)
 from app.services.filters import EmployeeFilters, apply_filters
 
 
@@ -40,13 +47,15 @@ def _group_columns(group_by: GroupBy) -> tuple[ColumnElement, ColumnElement]:
 
 
 def _base(
-    columns: Callable[[Subquery], list], filters: EmployeeFilters, salaried_only: bool
+    columns: Callable[[Subquery], list], filters: EmployeeFilters, salaried_only: bool, comp: Subquery | Table | None = None
 ) -> tuple[Select, Subquery]:
     """SELECT `columns(comp)` over filtered employees joined to department, country and current pay.
 
     `salaried_only` inner-joins compensation so employees without a salary record are excluded.
+    `comp` defaults to the current-compensation subquery; pass a snapshot to reuse one.
     """
-    comp = current_compensation_subquery()
+    if comp is None:
+        comp = current_compensation_subquery()
     stmt = (
         select(*columns(comp))
         .select_from(Employee)
@@ -89,7 +98,9 @@ def grouped(
     return sorted(rows, key=lambda r: r[2], reverse=True)
 
 
-def _median(db: Session, filters: EmployeeFilters, measure: Measure, group_by: GroupBy | None) -> list[tuple[object, str, float]]:
+def _median(
+    db: Session, filters: EmployeeFilters, measure: Measure, group_by: GroupBy | None, comp: Subquery | Table | None = None
+) -> list[tuple[object, str, float]]:
     """Median via window functions (SQLite has no MEDIAN aggregate).
 
     Averages the middle one or two rows of each partition.
@@ -108,7 +119,7 @@ def _median(db: Session, filters: EmployeeFilters, measure: Measure, group_by: G
             cols = [key.label("gkey"), label.label("glabel"), *cols]
         return cols
 
-    inner, _ = _base(columns, filters, salaried_only=True)
+    inner, _ = _base(columns, filters, salaried_only=True, comp=comp)
     ranked = inner.subquery()
     middle = ranked.c.rn.in_([(ranked.c.cnt + 1) // 2, (ranked.c.cnt + 2) // 2])
     if group_by:
@@ -137,7 +148,7 @@ def top_earners(
     return [{**row._asdict(), "value": round(float(row.value), 2)} for row in db.execute(stmt)]
 
 
-def _breakdown(db: Session, filters: EmployeeFilters, group_by: GroupBy) -> list[GroupBreakdown]:
+def _breakdown(db: Session, filters: EmployeeFilters, group_by: GroupBy, comp: Table) -> list[GroupBreakdown]:
     key, label = _group_columns(group_by)
 
     def columns(comp):
@@ -149,7 +160,7 @@ def _breakdown(db: Session, filters: EmployeeFilters, group_by: GroupBy) -> list
             func.coalesce(func.sum(comp.c.total_comp_usd), 0),
         ]
 
-    stmt, _ = _base(columns, filters, salaried_only=False)
+    stmt, _ = _base(columns, filters, salaried_only=False, comp=comp)
     rows = db.execute(stmt.group_by(key, label))
     result = [
         GroupBreakdown(id=k, name=n, headcount=c, avg_salary_usd=round(a, 2), total_payroll_usd=round(t, 2))
@@ -159,23 +170,31 @@ def _breakdown(db: Session, filters: EmployeeFilters, group_by: GroupBy) -> list
 
 
 def summary(db: Session, filters: EmployeeFilters) -> AnalyticsSummary:
-    stmt, _ = _base(
-        lambda c: [
-            func.count(Employee.id),
-            func.coalesce(func.sum(c.c.total_comp_usd), 0),
-            func.coalesce(func.avg(c.c.annual_base_usd), 0),
-            func.coalesce(func.avg(c.c.bonus_usd), 0),
-        ],
-        filters,
-        salaried_only=False,
-    )
-    headcount, total, avg, avg_bonus = db.execute(stmt).one()
-    return AnalyticsSummary(
-        headcount=headcount,
-        total_payroll_usd=round(total, 2),
-        avg_salary_usd=round(avg, 2),
-        median_salary_usd=aggregate(db, filters, Metric.MEDIAN) or 0.0,
-        avg_bonus_usd=round(avg_bonus, 2),
-        by_department=_breakdown(db, filters, GroupBy.DEPARTMENT),
-        by_country=_breakdown(db, filters, GroupBy.COUNTRY),
-    )
+    # Rank salaries once, only for employees matching the non-salary filters, and reuse it for every aggregate.
+    candidates = apply_filters(select(Employee.id), replace(filters, min_salary_usd=None, max_salary_usd=None))
+    comp = snapshot_current_compensation(db, candidates)
+    try:
+        stmt, _ = _base(
+            lambda c: [
+                func.count(Employee.id),
+                func.coalesce(func.sum(c.c.total_comp_usd), 0),
+                func.coalesce(func.avg(c.c.annual_base_usd), 0),
+                func.coalesce(func.avg(c.c.bonus_usd), 0),
+            ],
+            filters,
+            salaried_only=False,
+            comp=comp,
+        )
+        headcount, total, avg, avg_bonus = db.execute(stmt).one()
+        median = _median(db, filters, Measure.BASE_SALARY, group_by=None, comp=comp)
+        return AnalyticsSummary(
+            headcount=headcount,
+            total_payroll_usd=round(total, 2),
+            avg_salary_usd=round(avg, 2),
+            median_salary_usd=median[0][2] if median else 0.0,
+            avg_bonus_usd=round(avg_bonus, 2),
+            by_department=_breakdown(db, filters, GroupBy.DEPARTMENT, comp),
+            by_country=_breakdown(db, filters, GroupBy.COUNTRY, comp),
+        )
+    finally:
+        drop_snapshot(db)

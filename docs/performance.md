@@ -20,21 +20,21 @@ Seeded database (10,000 employees, 25,092 salaries, 3.9 MB), FastAPI `TestClient
 
 | Request | Median | Max |
 |---|---|---|
-| `GET /api/employees` — page 1, default sort | 35 ms | 55 ms |
-| `GET /api/employees` — last page (400 of 400) | 46 ms | 58 ms |
-| `GET /api/employees` — search `smith` | 57 ms | 67 ms |
+| `GET /api/employees` — page 1, default sort | 6 ms | 28 ms |
+| `GET /api/employees` — last page (400 of 400) | 10 ms | 11 ms |
+| `GET /api/employees` — search `smith` | 21 ms | 29 ms |
 | `GET /api/employees` — 2 departments + 2 countries, salary 80k–150k, sorted by salary | 57 ms | 58 ms |
-| `GET /api/employees/{id}` | 40 ms | 42 ms |
-| `GET /api/analytics/summary` — all 10k | 164 ms | 210 ms |
-| `GET /api/analytics/summary` — one country | 149 ms | 164 ms |
+| `GET /api/employees/{id}` | 3 ms | 5 ms |
+| `GET /api/analytics/summary` — all 10k (first request computes, the rest are cached) | 2 ms | 64 ms |
+| `GET /api/analytics/summary` — one country (same) | 2 ms | 16 ms |
 | `POST /api/ai/query` — "median salary by department" (rule parser) | 44 ms | 49 ms |
 
 Reproduce from `backend/`: `python -m scripts.seed --reset && python -m scripts.benchmark`. An LLM-parsed question adds the model's latency (a few seconds) on top of the execution time; the rule parser adds <1 ms.
 
 ## Known bottlenecks and next steps
 
-1. **The current-salary subquery ranks every salary row**, even when only one employee is needed — which is why `GET /api/employees/{id}` (40 ms) costs about the same as a page of 25. Fix: push the employee predicate into the subquery, or maintain a `salaries.is_current` flag / `current_salary_id` updated transactionally when salary records change.
-2. **The dashboard summary runs four aggregate queries** (totals, median, two breakdowns). Each is fast; together they are ~160 ms. Options: a single CTE that materialises current compensation once, or caching the summary and invalidating it on salary writes (writes are rare relative to reads).
+1. **The current-salary subquery ranks every salary row** when it has to: salary-range filters and salary sorting need current pay for every candidate (~55 ms locally, about 1 s on Render's free tier). Other list requests pick the page's employee ids first and rank only those employees' salaries, and the detail view ranks one employee's. Fix for the remaining case: maintain a `salaries.is_current` flag / `current_salary_id` updated transactionally when salary records change (and when a future-dated record takes effect).
+2. **The dashboard summary runs four aggregate queries** (totals, median, two breakdowns). Current pay is ranked once per summary into a temporary table, only for employees matching the non-salary filters, and all four queries read that table: ~48 ms for all 10k (was ~160 ms) and 6–10 ms for a department or country. Results are also cached in-process per filter set and cleared on every commit (`app/services/summary_cache.py`), so repeat requests cost ~2 ms.
 3. **`OFFSET` pagination** degrades on very deep pages for large tables. At 10k rows the last page costs only ~10 ms more than the first; beyond ~1M rows, switch to keyset (cursor) pagination on `(sort_key, id)`.
 4. **Substring search** (`LIKE '%term%'`) can't use a B-tree index. Fine at 10k (57 ms); at larger scale use SQLite FTS5 or Postgres trigram indexes.
 5. **SQLite serialises writes.** Irrelevant for one HR manager; for many concurrent writers, move to Postgres (the SQLAlchemy code is portable apart from the median's integer division and `current_date`).

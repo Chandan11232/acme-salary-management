@@ -22,8 +22,8 @@ from app.services.filters import EmployeeFilters, apply_filters
 MAX_PAGE_SIZE = 100
 
 
-def _employee_with_comp_query() -> tuple[Select, object]:
-    comp = current_compensation_subquery()
+def _employee_with_comp_query(employee_ids: list[int] | None = None) -> tuple[Select, object]:
+    comp = current_compensation_subquery(employee_ids)
     stmt = (
         select(Employee, comp)
         .join(Employee.department)
@@ -74,9 +74,6 @@ def list_employees(
 ) -> Page[EmployeeListItem]:
     page_size = min(max(page_size, 1), MAX_PAGE_SIZE)
     page = max(page, 1)
-    stmt, comp = _employee_with_comp_query()
-    stmt = apply_filters(stmt, filters, comp)
-
     count_stmt = select(func.count(Employee.id))
     if filters.needs_compensation:
         count_comp = current_compensation_subquery()
@@ -86,24 +83,37 @@ def list_employees(
         count_stmt = apply_filters(count_stmt, filters)
     total = db.scalar(count_stmt) or 0
 
-    sort_column = {
-        EmployeeSortField.LAST_NAME: Employee.last_name,
-        EmployeeSortField.FIRST_NAME: Employee.first_name,
-        EmployeeSortField.HIRE_DATE: Employee.hire_date,
-        EmployeeSortField.JOB_TITLE: Employee.job_title,
-        EmployeeSortField.DEPARTMENT: Department.name,
-        EmployeeSortField.COUNTRY: Country.country_name,
-        EmployeeSortField.SALARY: comp.c.annual_base_usd,
-    }[sort_by]
-    ordered = sort_column.desc() if sort_order == SortOrder.DESC else sort_column.asc()
-    stmt = stmt.order_by(ordered.nulls_last(), Employee.id).limit(page_size).offset((page - 1) * page_size)
+    def ordering(comp) -> list:
+        sort_column = comp.c.annual_base_usd if sort_by == EmployeeSortField.SALARY else {
+            EmployeeSortField.LAST_NAME: Employee.last_name,
+            EmployeeSortField.FIRST_NAME: Employee.first_name,
+            EmployeeSortField.HIRE_DATE: Employee.hire_date,
+            EmployeeSortField.JOB_TITLE: Employee.job_title,
+            EmployeeSortField.DEPARTMENT: Department.name,
+            EmployeeSortField.COUNTRY: Country.country_name,
+        }[sort_by]
+        ordered = sort_column.desc() if sort_order == SortOrder.DESC else sort_column.asc()
+        return [ordered.nulls_last(), Employee.id]
+
+    if filters.needs_compensation or sort_by == EmployeeSortField.SALARY:
+        # Salary filters and sorting need current pay for every candidate.
+        stmt, comp = _employee_with_comp_query()
+        stmt = apply_filters(stmt, filters, comp)
+        stmt = stmt.order_by(*ordering(comp)).limit(page_size).offset((page - 1) * page_size)
+    else:
+        # Pick the page's employees first, then compute current pay for just those rows.
+        ids_stmt = select(Employee.id).join(Employee.department).join(Employee.country)
+        ids_stmt = apply_filters(ids_stmt, filters).order_by(*ordering(None)).limit(page_size).offset((page - 1) * page_size)
+        page_ids = list(db.scalars(ids_stmt))
+        stmt, comp = _employee_with_comp_query(page_ids)
+        stmt = stmt.where(Employee.id.in_(page_ids)).order_by(*ordering(comp))
 
     items = [_to_list_item(row) for row in db.execute(stmt)]
     return Page.build(items, total, page, page_size)
 
 
 def get_employee(db: Session, employee_id: int) -> EmployeeDetail:
-    stmt, _ = _employee_with_comp_query()
+    stmt, _ = _employee_with_comp_query([employee_id])
     row = db.execute(stmt.where(Employee.id == employee_id)).first()
     if row is None:
         raise NotFoundError(f"Employee {employee_id} not found")

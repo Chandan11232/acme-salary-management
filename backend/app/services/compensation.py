@@ -4,9 +4,11 @@ The current salary is the record with the latest effective_date on or before tod
 (ties broken by id); future-dated records are scheduled changes and are ignored.
 """
 
+from collections.abc import Sequence
 from enum import StrEnum
 
-from sqlalchemy import ColumnElement, Subquery, case, func, select
+from sqlalchemy import Column, ColumnElement, Float, Integer, MetaData, Select, Subquery, Table, case, func, insert, select, text
+from sqlalchemy.orm import Session
 
 from app.models import Country, Employee, PayFrequency, Salary
 
@@ -17,7 +19,11 @@ class Measure(StrEnum):
     TOTAL_COMPENSATION = "total_compensation"
 
 
-def current_compensation_subquery() -> Subquery:
+def current_compensation_subquery(employee_ids: Sequence[int] | Select | None = None) -> Subquery:
+    """Current pay for every employee, or only `employee_ids` (much cheaper than ranking every salary row).
+
+    `employee_ids` may be a list or a SELECT of employee ids.
+    """
     ranked = select(
         Salary.employee_id,
         Salary.base_salary,
@@ -27,7 +33,10 @@ def current_compensation_subquery() -> Subquery:
         func.row_number()
         .over(partition_by=Salary.employee_id, order_by=(Salary.effective_date.desc(), Salary.id.desc()))
         .label("rn"),
-    ).where(Salary.effective_date <= func.current_date()).subquery("ranked_salaries")
+    ).where(Salary.effective_date <= func.current_date())
+    if employee_ids is not None:
+        ranked = ranked.where(Salary.employee_id.in_(employee_ids))
+    ranked = ranked.subquery("ranked_salaries")
 
     periods = case(
         (ranked.c.pay_frequency == PayFrequency.MONTHLY, 12),
@@ -63,3 +72,33 @@ def measure_column(comp: Subquery, measure: Measure) -> ColumnElement[float]:
         Measure.BONUS: comp.c.bonus_usd,
         Measure.TOTAL_COMPENSATION: comp.c.total_comp_usd,
     }[measure]
+
+
+# Per-connection temporary table, so several aggregates can share one ranking pass.
+_snapshot = Table(
+    "current_comp_snapshot",
+    MetaData(),
+    Column("employee_id", Integer, primary_key=True),
+    Column("annual_base_usd", Float),
+    Column("bonus_usd", Float),
+    Column("total_comp_usd", Float),
+    prefixes=["TEMPORARY"],
+)
+
+
+def snapshot_current_compensation(db: Session, employee_ids: Select | None = None) -> Table:
+    """Materialise current pay (for `employee_ids`, or everyone) into a temporary table and return it.
+
+    The table has the USD columns of `current_compensation_subquery`; drop it with `drop_snapshot`.
+    """
+    connection = db.connection()
+    drop_snapshot(db)
+    _snapshot.create(connection)
+    comp = current_compensation_subquery(employee_ids)
+    columns = ["employee_id", "annual_base_usd", "bonus_usd", "total_comp_usd"]
+    connection.execute(insert(_snapshot).from_select(columns, select(*(comp.c[name] for name in columns))))
+    return _snapshot
+
+
+def drop_snapshot(db: Session) -> None:
+    db.connection().execute(text(f"DROP TABLE IF EXISTS {_snapshot.name}"))
