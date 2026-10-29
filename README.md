@@ -28,6 +28,8 @@ npm run dev                       # http://localhost:3000
 
 The frontend proxies `/api/*` to the backend (`next.config.ts`). If the API runs elsewhere, set `BACKEND_URL` (e.g. `BACKEND_URL=http://127.0.0.1:8100 npm run dev`). For `npm run build`, set it at **build** time, because Next.js bakes rewrites into the build.
 
+Open the app at `http://localhost:3000`. In dev mode, Next.js blocks its dev scripts on other hosts, so the "Network" URL renders only loading skeletons. To open it from another device, start with `ALLOWED_DEV_ORIGINS=192.168.x.x npm run dev`.
+
 Reseed from scratch with `python -m scripts.seed --reset`.
 
 ### Optional: Claude-powered parsing
