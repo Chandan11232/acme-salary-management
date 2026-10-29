@@ -29,8 +29,8 @@ class Employee(Base):
         Enum(EmploymentType, native_enum=False, length=20), index=True
     )
 
-    department: Mapped["Department"] = relationship(lazy="joined")
-    country: Mapped["Country"] = relationship(lazy="joined")
+    department: Mapped["Department"] = relationship()
+    country: Mapped["Country"] = relationship()
     salaries: Mapped[list["Salary"]] = relationship(
         back_populates="employee",
         cascade="all, delete-orphan",
