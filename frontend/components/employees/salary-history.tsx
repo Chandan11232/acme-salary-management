@@ -28,12 +28,12 @@ export function SalaryHistory({
   return (
     <Table>
       <TableHeader>
-        <TableRow className="hover:bg-transparent">
-          <TableHead className="px-4">Effective</TableHead>
-          <TableHead className="px-4 text-right">Base ({currency})</TableHead>
-          <TableHead className="px-4">Frequency</TableHead>
-          <TableHead className="px-4 text-right">Bonus ({currency})</TableHead>
-          <TableHead className="px-4">
+        <TableRow className="border-b-[1.5px] border-ink bg-muted/60 hover:bg-muted/60">
+          <TableHead className="eyebrow px-4 text-[10px] text-muted-foreground">Effective</TableHead>
+          <TableHead className="eyebrow px-4 text-[10px] text-muted-foreground text-right">Base ({currency})</TableHead>
+          <TableHead className="eyebrow px-4 text-[10px] text-muted-foreground">Frequency</TableHead>
+          <TableHead className="eyebrow px-4 text-[10px] text-muted-foreground text-right">Bonus ({currency})</TableHead>
+          <TableHead className="eyebrow px-4 text-[10px] text-muted-foreground">
             <span className="sr-only">Actions</span>
           </TableHead>
         </TableRow>
@@ -43,7 +43,7 @@ export function SalaryHistory({
           <TableRow key={salary.id}>
             <TableCell className="px-4">
               <span className="mr-2">{formatDate(salary.effective_date)}</span>
-              {salary.id === currentId && <Badge>Current</Badge>}
+              {salary.id === currentId && <Badge className="bg-orange text-[#1a1a17]">Current</Badge>}
               {salary.effective_date > today && <Badge variant="outline">Scheduled</Badge>}
             </TableCell>
             <TableCell className="px-4 text-right tabular-nums">{formatMoney(salary.base_salary, currency)}</TableCell>

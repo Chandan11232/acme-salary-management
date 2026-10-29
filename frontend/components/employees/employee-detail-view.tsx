@@ -11,6 +11,7 @@ import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { PageHeader } from "@/components/common/page-header";
 import { ErrorBanner } from "@/components/common/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,7 @@ export function EmployeeDetailView({ employeeId }: { employeeId: number }) {
   const currency = employee.country.currency_code;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
         <Button variant="link" size="sm" className="px-0" asChild>
         <Link href="/employees">
           <ArrowLeftIcon />
@@ -99,31 +100,29 @@ export function EmployeeDetailView({ employeeId }: { employeeId: number }) {
         </Link>
       </Button>
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {employee.first_name} {employee.last_name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {employee.job_title} · {employee.department.name} · {employee.country.country_name}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="lg" onClick={() => setModal({ kind: "edit-employee" })}>
+      <PageHeader
+        reference="B3"
+        eyebrow={`${employee.department.name} · ${employee.country.country_name}`}
+        title={`${employee.first_name} ${employee.last_name}`}
+        description={employee.job_title}
+        actions={
+        <>
+          <Button variant="outline" size="lg" className="h-10" onClick={() => setModal({ kind: "edit-employee" })}>
             <PencilIcon />
             Edit
           </Button>
-          <Button variant="destructive" size="lg" onClick={() => setModal({ kind: "delete-employee" })}>
+          <Button variant="destructive" size="lg" className="h-10" onClick={() => setModal({ kind: "delete-employee" })}>
             <Trash2Icon />
             Delete
           </Button>
-        </div>
-      </div>
+        </>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <Card className="shadow-hard lg:col-span-2">
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
+            <CardTitle className="eyebrow text-[11px] text-muted-foreground">Profile</CardTitle>
           </CardHeader>
           <CardContent>
           <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -136,16 +135,16 @@ export function EmployeeDetailView({ employeeId }: { employeeId: number }) {
           </dl>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-lilac shadow-hard">
           <CardHeader>
-            <CardTitle>Current compensation</CardTitle>
+            <CardTitle className="eyebrow text-[11px] text-muted-foreground">Current compensation</CardTitle>
             {comp && <CardDescription>Effective {formatDate(comp.effective_date)}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-3">
             {comp ? (
               <>
                 <div>
-                  <p className="text-2xl font-semibold tabular-nums">{formatUsd(comp.annual_base_usd)}</p>
+                  <p className="headline text-4xl tabular-nums">{formatUsd(comp.annual_base_usd)}</p>
                   <p className="text-xs text-muted-foreground">Annual base salary (USD)</p>
                 </div>
                 <dl className="grid grid-cols-2 gap-3">
@@ -166,9 +165,9 @@ export function EmployeeDetailView({ employeeId }: { employeeId: number }) {
         </Card>
       </div>
 
-      <Card className="pb-0">
+      <Card className="pb-0 shadow-hard">
         <CardHeader>
-          <CardTitle>Salary history</CardTitle>
+          <CardTitle className="font-display text-xl font-bold tracking-[-0.03em]">Salary history</CardTitle>
           <CardDescription>Amounts in {currency}</CardDescription>
           <CardAction>
             <Button onClick={() => setModal({ kind: "add-salary" })}>

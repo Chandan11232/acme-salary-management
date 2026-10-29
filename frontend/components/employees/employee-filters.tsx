@@ -41,7 +41,7 @@ function ChipGroup<T extends string | number>({
 }) {
   return (
     <fieldset className="space-y-2">
-      <legend className="text-xs font-medium text-muted-foreground">{legend}</legend>
+      <legend className="eyebrow text-muted-foreground">{legend}</legend>
       <div className="flex flex-wrap gap-1.5">
         {options.map((option) => {
           const active = selected.includes(option.value);
@@ -52,8 +52,8 @@ function ChipGroup<T extends string | number>({
               aria-pressed={active}
               onClick={() => onToggle(option.value)}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-xs transition-colors",
-                active ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                "rounded-sm border-[1.5px] px-2.5 py-1 text-xs font-medium transition-colors",
+                active ? "border-ink bg-primary text-primary-foreground" : "border-ink/30 bg-card text-muted-foreground hover:border-ink hover:text-foreground",
               )}
             >
               {option.label}
@@ -133,7 +133,7 @@ export function EmployeeFilters({
         </div>
         <Sheet open={open} onOpenChange={openDrawer}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" className="h-9">
               <FilterIcon />
               Filters
               {active.length > 0 && <Badge className="ml-0.5 h-5 min-w-5 px-1.5">{active.length}</Badge>}
@@ -141,7 +141,8 @@ export function EmployeeFilters({
           </SheetTrigger>
           <SheetContent className="flex flex-col">
             <SheetHeader>
-              <SheetTitle>Filter employees</SheetTitle>
+              <p className="eyebrow text-orange-deep">B2 · Filters</p>
+              <SheetTitle className="headline text-3xl">Narrow it down.</SheetTitle>
               <SheetDescription>Combine any filters; each group matches any selected value.</SheetDescription>
             </SheetHeader>
             <div className="flex-1 space-y-5 overflow-y-auto px-4">
@@ -167,7 +168,7 @@ export function EmployeeFilters({
               />
               <Separator />
               <fieldset className="space-y-2">
-                <legend className="text-xs font-medium text-muted-foreground">Annual base salary (USD)</legend>
+                <legend className="eyebrow text-muted-foreground">Annual base salary (USD)</legend>
                 <div className="grid grid-cols-2 gap-2">
                   <FormField label="Minimum" htmlFor="filter-min">
                     <Input

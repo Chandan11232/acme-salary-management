@@ -87,7 +87,7 @@ export function EmployeeFormDialog({
     <Dialog open onOpenChange={(open) => !open && !saving && onClose()}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit employee" : "Add employee"}</DialogTitle>
+          <DialogTitle className="headline text-2xl">{isEdit ? "Edit employee" : "Add employee"}</DialogTitle>
           <DialogDescription>{isEdit ? "Update profile details. Salary changes are recorded in the salary history." : "Create a new employee record."}</DialogDescription>
         </DialogHeader>
         <form id="employee-form" onSubmit={submit} className="max-h-[60vh] space-y-4 overflow-y-auto">
@@ -152,8 +152,8 @@ export function EmployeeFormDialog({
             </FormField>
           </div>
           {!isEdit && (
-            <fieldset className="space-y-3 rounded-lg border p-3">
-              <legend className="px-1 text-xs font-medium text-muted-foreground">Initial salary (optional)</legend>
+            <fieldset className="space-y-3 rounded-sm border-[1.5px] border-dashed border-ink/40 p-3">
+              <legend className="eyebrow px-1 text-muted-foreground">Initial salary (optional)</legend>
               <SalaryFields value={salary} onChange={setSalary} currency={currency} idPrefix="new-emp-salary" required={Boolean(salary.base_salary)} />
             </fieldset>
           )}

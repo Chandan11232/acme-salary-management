@@ -54,7 +54,7 @@ export function SalaryFormDialog({
     <Dialog open onOpenChange={(open) => !open && !saving && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{salary ? "Edit salary record" : "Add salary record"}</DialogTitle>
+          <DialogTitle className="headline text-2xl">{salary ? "Edit salary record" : "Add salary record"}</DialogTitle>
           <DialogDescription>The record with the latest effective date on or before today is the current salary.</DialogDescription>
         </DialogHeader>
         <form id="salary-form" onSubmit={submit} className="space-y-4">

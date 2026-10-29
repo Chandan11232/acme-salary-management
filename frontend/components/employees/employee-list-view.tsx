@@ -9,6 +9,7 @@ import { EmployeeTable } from "@/components/employees/employee-table";
 import { Pagination } from "@/components/employees/pagination";
 import { PlusIcon } from "lucide-react";
 
+import { PageHeader } from "@/components/common/page-header";
 import { ErrorBanner } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -84,17 +85,19 @@ export function EmployeeListView() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">Employees</h1>
-          <p className="text-sm text-muted-foreground">{data ? `${formatCount(data.total)} matching employees` : "Loading…"}</p>
-        </div>
-        <Button size="lg" onClick={() => setCreating(true)}>
-          <PlusIcon />
-          Add employee
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        reference="B2"
+        eyebrow="Employee directory"
+        title="Everyone on payroll."
+        description={data ? `${formatCount(data.total)} matching employees · click a row for salary history` : "Loading…"}
+        actions={
+          <Button size="lg" className="h-11 px-4" onClick={() => setCreating(true)}>
+            <PlusIcon />
+            Add employee
+          </Button>
+        }
+      />
 
       <EmployeeFilters value={filters} onChange={updateFilters} departments={departments} countries={countries} />
 
@@ -108,7 +111,7 @@ export function EmployeeListView() {
         />
       )}
 
-      <Card className="gap-0 overflow-hidden py-0">
+      <Card className="gap-0 overflow-hidden py-0 shadow-hard">
         <EmployeeTable rows={data?.items ?? []} loading={loading} sortBy={sort.by} sortOrder={sort.order} onSort={toggleSort} />
         {data && (
           <Pagination

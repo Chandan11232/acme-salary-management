@@ -40,7 +40,7 @@ export function EmployeeTable({
     <>
       <Table className={cn("transition-opacity", loading && rows.length > 0 && "opacity-60")}>
         <TableHeader>
-          <TableRow className="hover:bg-transparent">
+          <TableRow className="border-b-[1.5px] border-ink bg-muted/60 hover:bg-muted/60">
             {COLUMNS.map((col) => {
               const active = sortBy === col.key;
               const Icon = active ? (sortOrder === "asc" ? ArrowUpIcon : ArrowDownIcon) : ArrowUpDownIcon;
@@ -53,7 +53,7 @@ export function EmployeeTable({
                   <button
                     type="button"
                     onClick={() => onSort(col.key)}
-                    className={cn("inline-flex items-center gap-1 text-xs hover:text-foreground", active ? "text-foreground" : "text-muted-foreground")}
+                    className={cn("eyebrow inline-flex items-center gap-1 text-[10px] hover:text-orange-deep", active ? "text-foreground" : "text-muted-foreground")}
                   >
                     {col.label}
                     <Icon className={cn("size-3", !active && "opacity-50")} />
@@ -78,7 +78,7 @@ export function EmployeeTable({
                   tabIndex={0}
                   onClick={() => open(employee.id)}
                   onKeyDown={(e) => e.key === "Enter" && open(employee.id)}
-                  className="cursor-pointer focus-visible:bg-accent focus-visible:outline-none"
+                  className="cursor-pointer hover:bg-muted/70 focus-visible:bg-accent focus-visible:outline-none"
                 >
                   <TableCell className="px-4">
                     <div className="font-medium">
