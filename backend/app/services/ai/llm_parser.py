@@ -4,8 +4,6 @@ The model never sees employee data and never writes SQL; it only fills in the
 QuerySpec schema, which is validated before execution.
 """
 
-import anthropic
-
 from app.services.ai.query_spec import QuerySpec
 from app.services.ai.vocabulary import Vocabulary
 
@@ -27,6 +25,9 @@ Countries: {countries}"""
 
 class LLMParser:
     def __init__(self, api_key: str, model: str, timeout: float) -> None:
+        # Imported lazily: the SDK is only needed when an API key is configured.
+        import anthropic
+
         self._client = anthropic.Anthropic(api_key=api_key, timeout=timeout, max_retries=1)
         self._model = model
 
