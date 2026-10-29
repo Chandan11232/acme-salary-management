@@ -34,6 +34,11 @@ class TestSummaryEndpoint:
         body = client.get("/api/analytics/summary", params={"department_id": 999}).json()
         assert body["headcount"] == 0 and body["total_payroll_usd"] == 0 and body["median_salary_usd"] == 0
 
+    def test_cached_summary_refreshes_after_write(self, client):
+        assert client.get("/api/analytics/summary").json()["avg_salary_usd"] == pytest.approx(82_000)
+        client.post("/api/employees/4/salaries", json={"base_salary": 5_000_000, "bonus": 0, "effective_date": "2024-01-01"})
+        assert client.get("/api/analytics/summary").json()["avg_salary_usd"] == pytest.approx(88_000)
+
 
 class TestAggregates:
     @pytest.mark.parametrize(
