@@ -4,6 +4,7 @@ import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { EmptyState } from "@/components/common/states";
+import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -81,10 +82,15 @@ export function EmployeeTable({
                   className="cursor-pointer hover:bg-muted/70 focus-visible:bg-accent focus-visible:outline-none"
                 >
                   <TableCell className="px-4">
-                    <div className="font-medium">
-                      {employee.first_name} {employee.last_name}
+                    <div className="flex items-center gap-3">
+                      <EmployeeAvatar firstName={employee.first_name} lastName={employee.last_name} departmentId={employee.department.id} />
+                      <div>
+                        <div className="font-medium">
+                          {employee.first_name} {employee.last_name}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{employee.email}</div>
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">{employee.email}</div>
                   </TableCell>
                   <TableCell className="hidden px-4 md:table-cell">
                     <div>{employee.job_title}</div>

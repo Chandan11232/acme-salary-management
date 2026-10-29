@@ -1,18 +1,20 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { LayoutGridIcon, PlusIcon, TableIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { PageHeader } from "@/components/common/page-header";
+import { EmptyState, ErrorBanner } from "@/components/common/states";
+import { EmployeeCard } from "@/components/employees/employee-card";
 import { EmployeeFilters, EMPTY_FILTERS, type FilterState } from "@/components/employees/employee-filters";
 import { EmployeeFormDialog } from "@/components/employees/employee-form-dialog";
 import { EmployeeTable } from "@/components/employees/employee-table";
 import { Pagination } from "@/components/employees/pagination";
-import { PlusIcon } from "lucide-react";
-
-import { PageHeader } from "@/components/common/page-header";
-import { ErrorBanner } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/lib/api";
 import { formatCount } from "@/lib/format";
 import type { EmployeeListItem, EmployeeQuery, Page, SortField, SortOrder } from "@/lib/types";
@@ -21,10 +23,20 @@ import { useReferenceData } from "@/lib/use-reference-data";
 
 const parseAmount = (value: string) => (value.trim() === "" || Number.isNaN(Number(value)) ? undefined : Number(value));
 
+type View = "table" | "cards";
+
+/** Deep links, e.g. from the dashboard: /employees?department=3&country=2&view=cards */
+function filtersFromUrl(params: URLSearchParams): FilterState {
+  const ids = (key: string) => params.getAll(key).map(Number).filter((n) => Number.isInteger(n) && n > 0);
+  return { ...EMPTY_FILTERS, departmentIds: ids("department"), countryIds: ids("country") };
+}
+
 export function EmployeeListView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { departments, countries, error: referenceError } = useReferenceData();
-  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<FilterState>(() => filtersFromUrl(searchParams));
+  const [view, setView] = useState<View>(() => (searchParams.get("view") === "cards" ? "cards" : "table"));
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [sort, setSort] = useState<{ by: SortField; order: SortOrder }>({ by: "last_name", order: "asc" });
@@ -90,12 +102,24 @@ export function EmployeeListView() {
         reference="B2"
         eyebrow="Employee directory"
         title="Everyone on payroll."
-        description={data ? `${formatCount(data.total)} matching employees · click a row for salary history` : "Loading…"}
+        description={data ? `${formatCount(data.total)} matching employees · open anyone for their salary history` : "Loading…"}
         actions={
-          <Button size="lg" className="h-11 px-4" onClick={() => setCreating(true)}>
-            <PlusIcon />
-            Add employee
-          </Button>
+          <>
+            <ToggleGroup type="single" variant="outline" value={view} onValueChange={(next) => next && setView(next as View)} aria-label="View">
+              <ToggleGroupItem value="table" aria-label="Table view" className="h-11 px-3">
+                <TableIcon />
+                Table
+              </ToggleGroupItem>
+              <ToggleGroupItem value="cards" aria-label="Card view" className="h-11 px-3">
+                <LayoutGridIcon />
+                Cards
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <Button size="lg" className="h-11 px-4" onClick={() => setCreating(true)}>
+              <PlusIcon />
+              Add employee
+            </Button>
+          </>
         }
       />
 
@@ -111,8 +135,28 @@ export function EmployeeListView() {
         />
       )}
 
+      {view === "cards" && (
+        <div className={loading && data ? "opacity-60 transition-opacity" : "transition-opacity"}>
+          {!data ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }, (_, i) => (
+                <Skeleton key={i} className="h-56 rounded-xl" />
+              ))}
+            </div>
+          ) : data.items.length === 0 ? (
+            <EmptyState>No employees match your filters.</EmptyState>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {data.items.map((employee) => (
+                <EmployeeCard key={employee.id} employee={employee} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <Card className="gap-0 overflow-hidden py-0 shadow-hard">
-        <EmployeeTable rows={data?.items ?? []} loading={loading} sortBy={sort.by} sortOrder={sort.order} onSort={toggleSort} />
+        {view === "table" && <EmployeeTable rows={data?.items ?? []} loading={loading} sortBy={sort.by} sortOrder={sort.order} onSort={toggleSort} />}
         {data && (
           <Pagination
             page={data.page}
