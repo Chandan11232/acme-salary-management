@@ -4,60 +4,72 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* shadcn/ui tokens (neutral base, blue primary) plus app-specific chart/status tokens. */
+/*
+ * Editorial "drafting sheet" theme: warm paper, ink-black type and 1.5px rules,
+ * hard offset shadows, an orange accent and lilac panels. Exposed as shadcn/ui tokens.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0.002 100);
-  --foreground: oklch(0.2 0.005 100);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.005 100);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.005 100);
-  --primary: #2a78d6;
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.003 100);
-  --secondary-foreground: oklch(0.25 0.005 100);
-  --muted: oklch(0.96 0.003 100);
-  --muted-foreground: oklch(0.5 0.008 100);
-  --accent: oklch(0.95 0.02 250);
-  --accent-foreground: oklch(0.35 0.12 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.004 100);
-  --input: oklch(0.91 0.004 100);
-  --ring: #2a78d6;
-  --success: oklch(0.52 0.12 155);
-  --chart-bar: #2a78d6;
-  --chart-track: oklch(0.94 0.003 100);
+  --radius: 0.375rem;
+  --background: #f7f6ef;
+  --foreground: #1a1a17;
+  --card: #fffef8;
+  --card-foreground: #1a1a17;
+  --popover: #fffef8;
+  --popover-foreground: #1a1a17;
+  --primary: #1a1a17;
+  --primary-foreground: #fffef8;
+  --secondary: #efede3;
+  --secondary-foreground: #1a1a17;
+  --muted: #efede3;
+  --muted-foreground: #5f5e57;
+  --accent: #e4d5f5;
+  --accent-foreground: #1a1a17;
+  --destructive: #b42318;
+  --border: #d9d7cc;
+  --input: #d9d7cc;
+  --ring: #e8613c;
+  --ink: #1a1a17;
+  --orange: #e8613c;
+  --orange-deep: #c24a28;
+  --lilac: #e4d5f5;
+  --success: #2f7d4f;
+  --chart-bar: #e8613c;
+  --chart-track: #efede3;
 }
 
 .dark {
-  --background: oklch(0.16 0.003 100);
-  --foreground: oklch(0.94 0.003 100);
-  --card: oklch(0.2 0.003 100);
-  --card-foreground: oklch(0.94 0.003 100);
-  --popover: oklch(0.22 0.003 100);
-  --popover-foreground: oklch(0.94 0.003 100);
-  --primary: #3987e5;
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.26 0.003 100);
-  --secondary-foreground: oklch(0.94 0.003 100);
-  --muted: oklch(0.26 0.003 100);
-  --muted-foreground: oklch(0.7 0.006 100);
-  --accent: oklch(0.3 0.05 255);
-  --accent-foreground: oklch(0.88 0.06 250);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: #3987e5;
-  --success: oklch(0.75 0.13 155);
-  --chart-bar: #3987e5;
-  --chart-track: oklch(0.27 0.003 100);
+  --background: #161613;
+  --foreground: #f2f0e6;
+  --card: #1f1e1a;
+  --card-foreground: #f2f0e6;
+  --popover: #23221e;
+  --popover-foreground: #f2f0e6;
+  --primary: #f2f0e6;
+  --primary-foreground: #161613;
+  --secondary: #2a2924;
+  --secondary-foreground: #f2f0e6;
+  --muted: #2a2924;
+  --muted-foreground: #a9a79c;
+  --accent: #3a3049;
+  --accent-foreground: #f2f0e6;
+  --destructive: #f97066;
+  --border: #3a3933;
+  --input: #3a3933;
+  --ring: #e8613c;
+  --ink: #f2f0e6;
+  --orange: #e8613c;
+  --orange-deep: #f08a68;
+  --lilac: #3a3049;
+  --success: #6fcf97;
+  --chart-bar: #e8613c;
+  --chart-track: #2a2924;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-inter-tight);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-inter-tight);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -76,14 +88,42 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-orange: var(--orange);
+  --color-orange-deep: var(--orange-deep);
+  --color-lilac: var(--lilac);
   --color-success: var(--success);
   --color-chart-bar: var(--chart-bar);
   --color-chart-track: var(--chart-track);
-  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-sm: 4px;
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+}
+
+/* Signature pieces of the sheet look. */
+@utility rule {
+  border: 1.5px solid var(--ink);
+}
+@utility shadow-hard {
+  box-shadow: 6px 6px 0 var(--ink);
+}
+@utility shadow-hard-sm {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+@utility eyebrow {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+@utility headline {
+  font-family: var(--font-inter-tight), var(--font-inter), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
 }
 
 @layer base {
@@ -92,8 +132,13 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
   }
   html {
     @apply font-sans;
+  }
+  ::selection {
+    background: var(--orange);
+    color: #fffef8;
   }
 }
