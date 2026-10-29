@@ -12,6 +12,9 @@ import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { PageHeader } from "@/components/common/page-header";
+import { EmployeeAvatar } from "@/components/employees/employee-avatar";
+import { EmployeeStats } from "@/components/employees/employee-stats";
+import { SalaryTrendChart } from "@/components/employees/salary-trend-chart";
 import { ErrorBanner } from "@/components/common/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -100,24 +103,36 @@ export function EmployeeDetailView({ employeeId }: { employeeId: number }) {
         </Link>
       </Button>
 
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+        <EmployeeAvatar
+          firstName={employee.first_name}
+          lastName={employee.last_name}
+          departmentId={employee.department.id}
+          className="size-20 shadow-hard-sm [&_[data-slot=avatar-fallback]]:font-display [&_[data-slot=avatar-fallback]]:text-2xl"
+        />
+        <div className="flex-1">
       <PageHeader
-        reference="B3"
-        eyebrow={`${employee.department.name} · ${employee.country.country_name}`}
-        title={`${employee.first_name} ${employee.last_name}`}
-        description={employee.job_title}
-        actions={
-        <>
-          <Button variant="outline" size="lg" className="h-10" onClick={() => setModal({ kind: "edit-employee" })}>
-            <PencilIcon />
-            Edit
-          </Button>
-          <Button variant="destructive" size="lg" className="h-10" onClick={() => setModal({ kind: "delete-employee" })}>
-            <Trash2Icon />
-            Delete
-          </Button>
-        </>
-        }
-      />
+          reference="B3"
+          eyebrow={`${employee.department.name} · ${employee.country.country_name}`}
+          title={`${employee.first_name} ${employee.last_name}`}
+          description={employee.job_title}
+          actions={
+          <>
+            <Button variant="outline" size="lg" className="h-10" onClick={() => setModal({ kind: "edit-employee" })}>
+              <PencilIcon />
+              Edit
+            </Button>
+            <Button variant="destructive" size="lg" className="h-10" onClick={() => setModal({ kind: "delete-employee" })}>
+              <Trash2Icon />
+              Delete
+            </Button>
+          </>
+          }
+        />
+        </div>
+      </div>
+
+      <EmployeeStats employee={employee} />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <Card className="shadow-hard lg:col-span-2">
@@ -164,6 +179,8 @@ export function EmployeeDetailView({ employeeId }: { employeeId: number }) {
           </CardContent>
         </Card>
       </div>
+
+      <SalaryTrendChart salaries={employee.salaries} currency={currency} />
 
       <Card className="pb-0 shadow-hard">
         <CardHeader>
