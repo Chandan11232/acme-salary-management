@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.routers import analytics, employees, reference, salaries
+from app.routers import ai, analytics, employees, reference, salaries
 from app.services.errors import DomainError
 
 
@@ -24,7 +24,7 @@ def create_app() -> FastAPI:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    for module in (employees, salaries, reference, analytics):
+    for module in (employees, salaries, reference, analytics, ai):
         app.include_router(module.router)
     return app
 
