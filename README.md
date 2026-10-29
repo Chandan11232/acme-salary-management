@@ -8,6 +8,16 @@ Salary management and analytics for ACME Corp's HR team: 10,000 employees across
 
 **Live demo:** _add deployed URL_ · **Video walkthrough:** _add link_
 
+## Screenshots
+
+| Dashboard | Employee directory |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Employees](docs/screenshots/employees.png) |
+| **Employee detail & salary history** | **AI assistant** |
+| ![Employee detail](docs/screenshots/employee-detail.png) | ![Assistant](docs/screenshots/assistant.png) |
+
+The visual language is an editorial "drafting sheet": warm paper, ink type and 1.5px rules, hard offset shadows, an orange accent and lilac panels, set in Inter Tight / Inter / JetBrains Mono. All of it is defined as shadcn/ui theme tokens in `frontend/app/globals.css`, so the primitives stay stock shadcn.
+
 ## Artifacts
 
 | Document | What it covers |
