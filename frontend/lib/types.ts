@@ -85,9 +85,9 @@ export interface EmployeeQuery {
   sortBy: SortField;
   sortOrder: SortOrder;
   search?: string;
-  departmentId?: number;
-  countryId?: number;
-  employmentType?: EmploymentType;
+  departmentIds: number[];
+  countryIds: number[];
+  employmentTypes: EmploymentType[];
   minSalary?: number;
   maxSalary?: number;
 }

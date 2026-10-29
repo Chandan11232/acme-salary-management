@@ -7,9 +7,11 @@ import { EmployeeFilters, EMPTY_FILTERS, type FilterState } from "@/components/e
 import { EmployeeFormDialog } from "@/components/employees/employee-form-dialog";
 import { EmployeeTable } from "@/components/employees/employee-table";
 import { Pagination } from "@/components/employees/pagination";
+import { PlusIcon } from "lucide-react";
+
+import { ErrorBanner } from "@/components/common/states";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ErrorBanner } from "@/components/ui/states";
 import { api } from "@/lib/api";
 import { formatCount } from "@/lib/format";
 import type { EmployeeListItem, EmployeeQuery, Page, SortField, SortOrder } from "@/lib/types";
@@ -43,13 +45,13 @@ export function EmployeeListView() {
       sortBy: sort.by,
       sortOrder: sort.order,
       search,
-      departmentId: filters.departmentId,
-      countryId: filters.countryId,
-      employmentType: filters.employmentType,
+      departmentIds: filters.departmentIds,
+      countryIds: filters.countryIds,
+      employmentTypes: filters.employmentTypes,
       minSalary: parseAmount(minSalary),
       maxSalary: parseAmount(maxSalary),
     }),
-    [page, pageSize, sort, search, filters.departmentId, filters.countryId, filters.employmentType, minSalary, maxSalary],
+    [page, pageSize, sort, search, filters.departmentIds, filters.countryIds, filters.employmentTypes, minSalary, maxSalary],
   );
 
   useEffect(() => {
@@ -86,9 +88,12 @@ export function EmployeeListView() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Employees</h1>
-          <p className="text-sm text-fg-muted">{data ? `${formatCount(data.total)} matching employees` : "Loading…"}</p>
+          <p className="text-sm text-muted-foreground">{data ? `${formatCount(data.total)} matching employees` : "Loading…"}</p>
         </div>
-        <Button onClick={() => setCreating(true)}>+ Add employee</Button>
+        <Button size="lg" onClick={() => setCreating(true)}>
+          <PlusIcon />
+          Add employee
+        </Button>
       </div>
 
       <EmployeeFilters value={filters} onChange={updateFilters} departments={departments} countries={countries} />
@@ -103,7 +108,7 @@ export function EmployeeListView() {
         />
       )}
 
-      <Card className="overflow-hidden">
+      <Card className="gap-0 overflow-hidden py-0">
         <EmployeeTable rows={data?.items ?? []} loading={loading} sortBy={sort.by} sortOrder={sort.order} onSort={toggleSort} />
         {data && (
           <Pagination
@@ -125,7 +130,7 @@ export function EmployeeListView() {
       </Card>
 
       {creating && (
-        <EmployeeFormDialog open onClose={() => setCreating(false)} onSaved={(employee) => router.push(`/employees/${employee.id}`)} />
+        <EmployeeFormDialog onClose={() => setCreating(false)} onSaved={(employee) => router.push(`/employees/${employee.id}`)} />
       )}
     </div>
   );

@@ -63,9 +63,9 @@ function employeeParams(query: EmployeeQuery): URLSearchParams {
     sort_order: query.sortOrder,
   });
   if (query.search?.trim()) params.set("search", query.search.trim());
-  if (query.departmentId) params.set("department_id", String(query.departmentId));
-  if (query.countryId) params.set("country_id", String(query.countryId));
-  if (query.employmentType) params.set("employment_type", query.employmentType);
+  query.departmentIds.forEach((id) => params.append("department_id", String(id)));
+  query.countryIds.forEach((id) => params.append("country_id", String(id)));
+  query.employmentTypes.forEach((type) => params.append("employment_type", type));
   if (query.minSalary !== undefined) params.set("min_salary", String(query.minSalary));
   if (query.maxSalary !== undefined) params.set("max_salary", String(query.maxSalary));
   return params;

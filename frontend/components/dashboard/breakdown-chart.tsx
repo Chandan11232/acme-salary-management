@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 
-import { Card, CardHeader } from "@/components/ui/card";
-import { cn } from "@/components/ui/cn";
-import { EmptyState, Skeleton } from "@/components/ui/states";
+import { EmptyState } from "@/components/common/states";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCount, formatUsd, formatUsdCompact } from "@/lib/format";
 import type { GroupBreakdown } from "@/lib/types";
 
@@ -25,30 +26,22 @@ export function BreakdownChart({ title, rows }: { title: string; rows: GroupBrea
 
   return (
     <Card>
-      <CardHeader
-        title={title}
-        description="Current annual pay, USD"
-        action={
-          <div role="radiogroup" aria-label="Measure" className="flex rounded-md border border-line p-0.5">
-            {MEASURES.map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                role="radio"
-                aria-checked={m.key === measureKey}
-                onClick={() => setMeasureKey(m.key)}
-                className={cn(
-                  "rounded px-2 py-1 text-xs font-medium",
-                  m.key === measureKey ? "bg-accent-soft text-accent" : "text-fg-muted hover:text-fg",
-                )}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-        }
-      />
-      <div className="px-5 py-4">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>Current annual pay, USD</CardDescription>
+        <CardAction>
+          <Tabs value={measureKey} onValueChange={(value) => setMeasureKey(value as MeasureKey)}>
+            <TabsList>
+              {MEASURES.map((m) => (
+                <TabsTrigger key={m.key} value={m.key} className="text-xs">
+                  {m.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
         {sorted === null ? (
           <div className="space-y-3">
             {Array.from({ length: 6 }, (_, i) => (
@@ -60,8 +53,8 @@ export function BreakdownChart({ title, rows }: { title: string; rows: GroupBrea
         ) : (
           <ul className="space-y-1">
             {sorted.map((row) => (
-              <li key={row.id} className="group relative grid grid-cols-[8.5rem_1fr_5.5rem] items-center gap-3 rounded py-1.5 hover:bg-surface-muted/60">
-                <span className="truncate text-sm text-fg-muted" title={row.name}>
+              <li key={row.id} className="group relative grid grid-cols-[8.5rem_1fr_5.5rem] items-center gap-3 rounded py-1.5 hover:bg-muted/60">
+                <span className="truncate text-sm text-muted-foreground" title={row.name}>
                   {row.name}
                 </span>
                 <div className="h-3 rounded-r bg-chart-track">
@@ -73,24 +66,24 @@ export function BreakdownChart({ title, rows }: { title: string; rows: GroupBrea
                 <span className="text-right text-sm font-medium tabular-nums">{measure.format(row[measureKey])}</span>
                 <div
                   role="tooltip"
-                  className="pointer-events-none absolute top-full left-36 z-10 mt-1 hidden rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg group-hover:block"
+                  className="pointer-events-none absolute top-full left-36 z-10 mt-1 hidden rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-lg group-hover:block"
                 >
                   <p className="mb-1 font-semibold">{row.name}</p>
-                  <p className="text-fg-muted">
-                    Headcount <span className="font-medium text-fg tabular-nums">{formatCount(row.headcount)}</span>
+                  <p className="text-muted-foreground">
+                    Headcount <span className="font-medium text-foreground tabular-nums">{formatCount(row.headcount)}</span>
                   </p>
-                  <p className="text-fg-muted">
-                    Avg salary <span className="font-medium text-fg tabular-nums">{formatUsd(row.avg_salary_usd)}</span>
+                  <p className="text-muted-foreground">
+                    Avg salary <span className="font-medium text-foreground tabular-nums">{formatUsd(row.avg_salary_usd)}</span>
                   </p>
-                  <p className="text-fg-muted">
-                    Payroll <span className="font-medium text-fg tabular-nums">{formatUsd(row.total_payroll_usd)}</span>
+                  <p className="text-muted-foreground">
+                    Payroll <span className="font-medium text-foreground tabular-nums">{formatUsd(row.total_payroll_usd)}</span>
                   </p>
                 </div>
               </li>
             ))}
           </ul>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
 }

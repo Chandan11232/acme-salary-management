@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { AnswerTable } from "@/components/ai/answer-table";
+import { AlertCircleIcon, SendIcon, SparklesIcon } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/components/ui/cn";
-import { Input } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import type { AIAnswer } from "@/lib/types";
 
@@ -55,22 +57,18 @@ export function ChatPanel() {
   }
 
   return (
-    <Card className="flex h-[calc(100vh-11rem)] min-h-[28rem] flex-col">
+    <Card className="h-[calc(100vh-11rem)] min-h-[28rem] gap-0 py-0">
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5" aria-live="polite">
         {messages.length === 0 && (
           <div className="mx-auto max-w-xl py-8 text-center">
+            <SparklesIcon className="mx-auto mb-3 size-6 text-primary" />
             <p className="text-base font-medium">Ask about headcount and compensation</p>
-            <p className="mt-1 text-sm text-fg-muted">Answers are computed live from the employee database, in annual USD.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Answers are computed live from the employee database, in annual USD.</p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => ask(s)}
-                  className="rounded-full border border-line px-3 py-1.5 text-xs text-fg-muted transition hover:border-accent hover:text-accent"
-                >
+                <Button key={s} variant="outline" size="sm" className="rounded-full text-xs" onClick={() => ask(s)}>
                   {s}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -78,17 +76,18 @@ export function ChatPanel() {
         {messages.map((message) => (
           <div key={message.id} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
             {message.role === "user" ? (
-              <div className="max-w-[80%] rounded-lg rounded-br-sm bg-accent px-3.5 py-2 text-sm text-accent-fg">{message.text}</div>
+              <div className="max-w-[80%] rounded-lg rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">{message.text}</div>
             ) : message.role === "error" ? (
-              <div role="alert" className="max-w-[80%] rounded-lg rounded-bl-sm bg-danger-soft px-3.5 py-2 text-sm text-danger">
-                ⚠ {message.text}
+              <div role="alert" className="flex max-w-[80%] items-center gap-2 rounded-lg rounded-bl-sm bg-destructive/10 px-3.5 py-2 text-sm text-destructive">
+                <AlertCircleIcon className="size-4 shrink-0" />
+                {message.text}
               </div>
             ) : (
-              <div className="w-full max-w-[85%] rounded-lg rounded-bl-sm border border-line bg-surface-muted/40 px-3.5 py-2.5 text-sm">
+              <div className="w-full max-w-[85%] rounded-lg rounded-bl-sm border bg-muted/40 px-3.5 py-2.5 text-sm">
                 <p>{message.answer.answer}</p>
                 {message.answer.table && <AnswerTable table={message.answer.table} unit={message.answer.unit} />}
-                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-fg-subtle">
-                  <Badge tone={message.answer.parser === "llm" ? "accent" : "neutral"}>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                  <Badge variant={message.answer.parser === "llm" ? "default" : "secondary"}>
                     {message.answer.parser === "llm" ? "Parsed by Claude" : "Rule-based parser"}
                   </Badge>
                   {message.answer.interpretation && <span>Interpreted as: {message.answer.interpretation}</span>}
@@ -99,14 +98,14 @@ export function ChatPanel() {
         ))}
         {pending && (
           <div className="flex justify-start">
-            <div className="rounded-lg border border-line px-3.5 py-2 text-sm text-fg-muted">
+            <div className="rounded-lg border px-3.5 py-2 text-sm text-muted-foreground">
               <span className="animate-pulse">Thinking…</span>
             </div>
           </div>
         )}
         <div ref={endRef} />
       </div>
-      <form onSubmit={submit} className="flex gap-2 border-t border-line p-3">
+      <form onSubmit={submit} className="flex gap-2 border-t p-3">
         <Input
           aria-label="Ask a question"
           placeholder="e.g. Average salary of engineers in the UK"
@@ -114,8 +113,10 @@ export function ChatPanel() {
           maxLength={500}
           onChange={(e) => setQuestion(e.target.value)}
           disabled={pending}
+          className="h-9"
         />
-        <Button type="submit" disabled={pending || question.trim().length < 3}>
+        <Button type="submit" size="lg" disabled={pending || question.trim().length < 3}>
+          <SendIcon />
           Ask
         </Button>
       </form>

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 import { BreakdownChart } from "@/components/dashboard/breakdown-chart";
 import { MetricCard } from "@/components/dashboard/metric-card";
-import { Select } from "@/components/ui/field";
-import { ErrorBanner } from "@/components/ui/states";
+import { OptionSelect } from "@/components/common/option-select";
+import { ErrorBanner } from "@/components/common/states";
 import { api } from "@/lib/api";
 import { formatCount, formatUsd, formatUsdCompact } from "@/lib/format";
 import type { AnalyticsSummary } from "@/lib/types";
@@ -38,35 +38,25 @@ export function DashboardView() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold">Compensation overview</h1>
-          <p className="text-sm text-fg-muted">Current pay across ACME, normalised to annual USD.</p>
+          <p className="text-sm text-muted-foreground">Current pay across ACME, normalised to annual USD.</p>
         </div>
         <div className="flex gap-2">
-          <Select
-            aria-label="Filter by department"
+          <OptionSelect
+            label="Filter by department"
+            allLabel="All departments"
             className="w-44"
-            value={departmentId ?? ""}
-            onChange={(e) => setDepartmentId(e.target.value ? Number(e.target.value) : undefined)}
-          >
-            <option value="">All departments</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            aria-label="Filter by country"
+            value={departmentId}
+            options={departments.map((d) => ({ value: d.id, label: d.name }))}
+            onChange={setDepartmentId}
+          />
+          <OptionSelect
+            label="Filter by country"
+            allLabel="All countries"
             className="w-44"
-            value={countryId ?? ""}
-            onChange={(e) => setCountryId(e.target.value ? Number(e.target.value) : undefined)}
-          >
-            <option value="">All countries</option>
-            {countries.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.country_name}
-              </option>
-            ))}
-          </Select>
+            value={countryId}
+            options={countries.map((c) => ({ value: c.id, label: c.country_name }))}
+            onChange={setCountryId}
+          />
         </div>
       </div>
 

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
 
+import { FormError } from "@/components/common/form-error";
+import { FormField } from "@/components/common/form-field";
 import { SalaryFields, toSalaryInput, type SalaryFormState } from "@/components/employees/salary-fields";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { Field, Input, Select } from "@/components/ui/field";
-import { useToast } from "@/components/ui/toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { EMPLOYMENT_TYPE_LABELS, todayIso } from "@/lib/format";
 import type { EmployeeDetail, EmployeeInput, EmploymentType } from "@/lib/types";
@@ -36,19 +39,16 @@ function initialState(employee?: EmployeeDetail): FormState {
   };
 }
 
-/** Create (no `employee`) or edit an employee. Mount with a `key` to reset between uses. */
+/** Create (no `employee`) or edit an employee. Mount conditionally so state resets between uses. */
 export function EmployeeFormDialog({
-  open,
   onClose,
   employee,
   onSaved,
 }: {
-  open: boolean;
   onClose: () => void;
   employee?: EmployeeDetail;
   onSaved: (employee: EmployeeDetail) => void;
 }) {
-  const toast = useToast();
   const { departments, countries } = useReferenceData();
   const [form, setForm] = useState<FormState>(() => initialState(employee));
   const [salary, setSalary] = useState<SalaryFormState>({ base_salary: "", bonus: "", effective_date: todayIso(), pay_frequency: "ANNUAL" });
@@ -60,6 +60,10 @@ export function EmployeeFormDialog({
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (!form.department_id || !form.country_id) {
+      setError("Please choose a department and a country.");
+      return;
+    }
     setSaving(true);
     setError(null);
     const payload: EmployeeInput = {
@@ -80,84 +84,89 @@ export function EmployeeFormDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title={isEdit ? "Edit employee" : "Add employee"}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={saving}>
+    <Dialog open onOpenChange={(open) => !open && !saving && onClose()}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit employee" : "Add employee"}</DialogTitle>
+          <DialogDescription>{isEdit ? "Update profile details. Salary changes are recorded in the salary history." : "Create a new employee record."}</DialogDescription>
+        </DialogHeader>
+        <form id="employee-form" onSubmit={submit} className="max-h-[60vh] space-y-4 overflow-y-auto">
+          <FormError message={error} />
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="First name" htmlFor="emp-first">
+              <Input id="emp-first" required maxLength={100} value={form.first_name} onChange={(e) => set({ first_name: e.target.value })} />
+            </FormField>
+            <FormField label="Last name" htmlFor="emp-last">
+              <Input id="emp-last" required maxLength={100} value={form.last_name} onChange={(e) => set({ last_name: e.target.value })} />
+            </FormField>
+            <FormField label="Email" htmlFor="emp-email">
+              <Input id="emp-email" type="email" required value={form.email} onChange={(e) => set({ email: e.target.value })} />
+            </FormField>
+            <FormField label="Job title" htmlFor="emp-title">
+              <Input id="emp-title" required maxLength={150} value={form.job_title} onChange={(e) => set({ job_title: e.target.value })} />
+            </FormField>
+            <FormField label="Department" htmlFor="emp-dept">
+              <Select value={form.department_id} onValueChange={(v) => set({ department_id: v })}>
+                <SelectTrigger id="emp-dept" className="w-full">
+                  <SelectValue placeholder="Select…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label="Country" htmlFor="emp-country">
+              <Select value={form.country_id} onValueChange={(v) => set({ country_id: v })}>
+                <SelectTrigger id="emp-country" className="w-full">
+                  <SelectValue placeholder="Select…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.country_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+            <FormField label="Hire date" htmlFor="emp-hire">
+              <Input id="emp-hire" type="date" required value={form.hire_date} onChange={(e) => set({ hire_date: e.target.value })} />
+            </FormField>
+            <FormField label="Employment type" htmlFor="emp-type">
+              <Select value={form.employment_type} onValueChange={(v) => set({ employment_type: v as EmploymentType })}>
+                <SelectTrigger id="emp-type" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(EMPLOYMENT_TYPE_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+          </div>
+          {!isEdit && (
+            <fieldset className="space-y-3 rounded-lg border p-3">
+              <legend className="px-1 text-xs font-medium text-muted-foreground">Initial salary (optional)</legend>
+              <SalaryFields value={salary} onChange={setSalary} currency={currency} idPrefix="new-emp-salary" required={Boolean(salary.base_salary)} />
+            </fieldset>
+          )}
+        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
           <Button type="submit" form="employee-form" disabled={saving}>
             {saving ? "Saving…" : isEdit ? "Save changes" : "Add employee"}
           </Button>
-        </>
-      }
-    >
-      <form id="employee-form" onSubmit={submit} className="space-y-4">
-        {error && (
-          <p role="alert" className="rounded-md bg-danger-soft px-3 py-2 text-sm text-danger">
-            {error}
-          </p>
-        )}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="First name" htmlFor="emp-first">
-            <Input id="emp-first" required maxLength={100} value={form.first_name} onChange={(e) => set({ first_name: e.target.value })} />
-          </Field>
-          <Field label="Last name" htmlFor="emp-last">
-            <Input id="emp-last" required maxLength={100} value={form.last_name} onChange={(e) => set({ last_name: e.target.value })} />
-          </Field>
-          <Field label="Email" htmlFor="emp-email">
-            <Input id="emp-email" type="email" required value={form.email} onChange={(e) => set({ email: e.target.value })} />
-          </Field>
-          <Field label="Job title" htmlFor="emp-title">
-            <Input id="emp-title" required maxLength={150} value={form.job_title} onChange={(e) => set({ job_title: e.target.value })} />
-          </Field>
-          <Field label="Department" htmlFor="emp-dept">
-            <Select id="emp-dept" required value={form.department_id} onChange={(e) => set({ department_id: e.target.value })}>
-              <option value="" disabled>
-                Select…
-              </option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Country" htmlFor="emp-country">
-            <Select id="emp-country" required value={form.country_id} onChange={(e) => set({ country_id: e.target.value })}>
-              <option value="" disabled>
-                Select…
-              </option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.country_name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Hire date" htmlFor="emp-hire">
-            <Input id="emp-hire" type="date" required value={form.hire_date} onChange={(e) => set({ hire_date: e.target.value })} />
-          </Field>
-          <Field label="Employment type" htmlFor="emp-type">
-            <Select id="emp-type" value={form.employment_type} onChange={(e) => set({ employment_type: e.target.value as EmploymentType })}>
-              {Object.entries(EMPLOYMENT_TYPE_LABELS).map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-        {!isEdit && (
-          <fieldset className="space-y-3 rounded-md border border-line p-3">
-            <legend className="px-1 text-xs font-medium text-fg-muted">Initial salary (optional)</legend>
-            <SalaryFields value={salary} onChange={setSalary} currency={currency} idPrefix="new-emp-salary" />
-          </fieldset>
-        )}
-      </form>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }
