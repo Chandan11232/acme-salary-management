@@ -1,15 +1,11 @@
 "use client";
 
+import { AlertCircleIcon, ArrowRightIcon, CheckIcon, MessageSquareQuoteIcon } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { AnswerTable } from "@/components/ai/answer-table";
-import { AlertCircleIcon, SendIcon, SparklesIcon } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import type { AIAnswer } from "@/lib/types";
 
@@ -23,6 +19,9 @@ const SUGGESTIONS = [
   "Which department has the highest median salary?",
   "Average bonus by department",
 ];
+
+// The answer "screen" stays dark in both themes, like a drafting-table display.
+const SCREEN = "bg-[#1a1a17] text-[#fffef8]/80 [background-image:radial-gradient(rgb(255_254_248/0.07)_1px,transparent_1px)] [background-size:14px_14px]";
 
 export function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -57,55 +56,71 @@ export function ChatPanel() {
   }
 
   return (
-    <Card className="h-[calc(100vh-11rem)] min-h-[28rem] gap-0 py-0">
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5" aria-live="polite">
-        {messages.length === 0 && (
-          <div className="mx-auto max-w-xl py-8 text-center">
-            <SparklesIcon className="mx-auto mb-3 size-6 text-primary" />
-            <p className="text-base font-medium">Ask about headcount and compensation</p>
-            <p className="mt-1 text-sm text-muted-foreground">Answers are computed live from the employee database, in annual USD.</p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s) => (
-                <Button key={s} variant="outline" size="sm" className="rounded-full text-xs" onClick={() => ask(s)}>
-                  {s}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-        {messages.map((message) => (
-          <div key={message.id} className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
-            {message.role === "user" ? (
-              <div className="max-w-[80%] rounded-lg rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">{message.text}</div>
-            ) : message.role === "error" ? (
-              <div role="alert" className="flex max-w-[80%] items-center gap-2 rounded-lg rounded-bl-sm bg-destructive/10 px-3.5 py-2 text-sm text-destructive">
-                <AlertCircleIcon className="size-4 shrink-0" />
-                {message.text}
-              </div>
-            ) : (
-              <div className="w-full max-w-[85%] rounded-lg rounded-bl-sm border bg-muted/40 px-3.5 py-2.5 text-sm">
-                <p>{message.answer.answer}</p>
-                {message.answer.table && <AnswerTable table={message.answer.table} unit={message.answer.unit} />}
-                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                  <Badge variant={message.answer.parser === "llm" ? "default" : "secondary"}>
-                    {message.answer.parser === "llm" ? "Parsed by Claude" : "Rule-based parser"}
-                  </Badge>
-                  {message.answer.interpretation && <span>Interpreted as: {message.answer.interpretation}</span>}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-        {pending && (
-          <div className="flex justify-start">
-            <div className="rounded-lg border px-3.5 py-2 text-sm text-muted-foreground">
-              <span className="animate-pulse">Thinking…</span>
-            </div>
-          </div>
-        )}
-        <div ref={endRef} />
+    <section className="rounded-xl rule bg-lilac p-4 shadow-hard sm:p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <p className="eyebrow flex items-center gap-2">
+          <span className="size-1.5 rounded-full bg-ink" aria-hidden />
+          Live compensation data
+        </p>
+        <p className="eyebrow text-muted-foreground">10,000 employees · USD</p>
       </div>
-      <form onSubmit={submit} className="flex gap-2 border-t p-3">
+
+      <div className={`${SCREEN} h-[min(60vh,34rem)] min-h-[22rem] overflow-y-auto rounded-sm border-[1.5px] border-ink p-4 sm:p-5`} aria-live="polite">
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col justify-center">
+            <p className="eyebrow mb-4 text-[#fffef8]/60">Try one of these</p>
+            <ul className="divide-y divide-[#fffef8]/10 border-y border-[#fffef8]/10">
+              {SUGGESTIONS.map((s) => (
+                <li key={s}>
+                  <button
+                    type="button"
+                    onClick={() => ask(s)}
+                    className="group flex w-full items-center justify-between gap-4 py-2.5 text-left text-sm text-[#fffef8]/85 transition-colors hover:text-orange"
+                  >
+                    {s}
+                    <ArrowRightIcon className="size-4 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {messages.map((message) =>
+              message.role === "user" ? (
+                <div key={message.id} className="flex justify-end">
+                  <div className="flex max-w-[85%] items-start gap-2.5 rounded-sm border-[1.5px] border-ink bg-[#fffef8] px-3.5 py-2.5 text-[15px] font-medium text-[#1a1a17] shadow-[4px_4px_0_var(--orange)]">
+                    <MessageSquareQuoteIcon className="mt-0.5 size-4 shrink-0" />“{message.text}”
+                  </div>
+                </div>
+              ) : message.role === "error" ? (
+                <div key={message.id} role="alert" className="flex items-center gap-2 text-sm text-[#f97066]">
+                  <AlertCircleIcon className="size-4 shrink-0" />
+                  {message.text}
+                </div>
+              ) : (
+                <div key={message.id} className="max-w-[92%] border-l-2 border-orange pl-4">
+                  <p className="text-[15px] leading-relaxed text-[#fffef8]">{message.answer.answer}</p>
+                  {message.answer.table && <AnswerTable table={message.answer.table} unit={message.answer.unit} />}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="eyebrow flex items-center gap-1 text-[10px] text-orange">
+                      <CheckIcon className="size-3" />
+                      {message.answer.parser === "llm" ? "Parsed by Claude" : "Rule-based parser"}
+                    </span>
+                    {message.answer.interpretation && (
+                      <span className="font-mono text-[11px] text-[#fffef8]/50">{message.answer.interpretation}</span>
+                    )}
+                  </div>
+                </div>
+              ),
+            )}
+            {pending && <p className="eyebrow animate-pulse text-[#fffef8]/60">Computing…</p>}
+            <div ref={endRef} />
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={submit} className="mt-4 flex gap-2">
         <Input
           aria-label="Ask a question"
           placeholder="e.g. Average salary of engineers in the UK"
@@ -113,13 +128,14 @@ export function ChatPanel() {
           maxLength={500}
           onChange={(e) => setQuestion(e.target.value)}
           disabled={pending}
-          className="h-9"
+          className="h-11 border-[1.5px] border-ink text-[15px]"
         />
-        <Button type="submit" size="lg" disabled={pending || question.trim().length < 3}>
-          <SendIcon />
+        <Button type="submit" size="lg" className="h-11 gap-4 px-5" disabled={pending || question.trim().length < 3}>
           Ask
+          <ArrowRightIcon />
         </Button>
       </form>
-    </Card>
+      <p className="mt-3 text-xs text-muted-foreground">Answers are computed in the database; the model never sees salaries and never writes SQL.</p>
+    </section>
   );
 }
