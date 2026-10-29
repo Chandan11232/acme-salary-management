@@ -3,10 +3,23 @@
 Salary management and analytics for ACME Corp's HR team: 10,000 employees across 6 countries, with CRUD, server-side filtering, a compensation dashboard, and a natural-language assistant.
 
 - **Backend:** FastAPI · SQLAlchemy 2 · SQLite · Pydantic v2 (`backend/`)
-- **Frontend:** Next.js 16 (App Router) · React 19 · Tailwind CSS v4 (`frontend/`)
+- **Frontend:** Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · shadcn/ui (`frontend/`)
 - **AI:** Claude via structured outputs (optional), with a deterministic rule-based parser as default and fallback
 
-See [`requirements.md`](requirements.md) for scope and [`plan.md`](plan.md) for the original plan.
+**Live demo:** _add deployed URL_ · **Video walkthrough:** _add link_
+
+## Artifacts
+
+| Document | What it covers |
+|---|---|
+| [`requirements.md`](requirements.md) | One-page requirements: goal, features, and what was left out and why |
+| [`plan.md`](plan.md) | The original phased engineering plan |
+| [`docs/architecture.md`](docs/architecture.md) | System, data model and AI pipeline diagrams; layering; decision table |
+| [`docs/performance.md`](docs/performance.md) | Scale approach, measured latencies, known bottlenecks |
+| [`docs/ai-workflow.md`](docs/ai-workflow.md) | How AI tools were used, the prompts, and the defects verification caught |
+| [`docs/ai/engineering-guidelines.md`](docs/ai/engineering-guidelines.md) | The instruction file given to the coding agent |
+
+**Stack note:** the brief prefers the stack of the role applied for (Java/Angular) but allows any. This submission uses FastAPI + Next.js; the backend follows the same layering a Spring app would (router ≈ controller, schema ≈ DTO, service, model ≈ entity).
 
 ## Quick start
 
@@ -18,7 +31,7 @@ cd backend
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python -m scripts.seed            # 10,000 employees, ~1s, deterministic
-uvicorn app.main:app --port 8000  # API docs at http://localhost:8000/docs
+uvicorn app.main:app --port 8000  # or `uvicorn main:app`; API docs at http://localhost:8000/docs
 
 # 2. Frontend (new terminal)
 cd frontend
@@ -51,6 +64,8 @@ Tests use a fresh in-memory database per test with six hand-checkable employees 
 
 ## Architecture
 
+Full diagrams and the decision table are in [`docs/architecture.md`](docs/architecture.md).
+
 ```
 backend/app/
   models/      SQLAlchemy tables: Department, Country, Employee, Salary
@@ -63,7 +78,7 @@ backend/app/
   routers/     thin HTTP layer; DomainError → 404/409/422 in main.py
 frontend/
   app/         routes: / (dashboard), /employees, /employees/[id], /assistant
-  components/  ui/ (kit), dashboard/, employees/, ai/
+  components/  ui/ (shadcn/ui), common/, dashboard/, employees/, ai/
   lib/         typed API client, types, formatters, hooks
 ```
 
@@ -71,7 +86,7 @@ frontend/
 
 - **Salary history, with a derived current salary.** `salaries` holds every record. The *current* salary is the latest record with `effective_date <= today`, picked with a `ROW_NUMBER()` window function. Future-dated raises are stored but don't count until they take effect. Nothing is denormalised, so it can't drift.
 - **Multi-currency.** Amounts are stored in local currency. `base_salary` is per pay period (annual, monthly or bi-weekly) and `bonus` is annual. Analytics, salary filters and sorting use annual USD (`× periods × exchange_rate_to_usd`), rounded to cents in SQL.
-- **Scale (10k rows).** Lists are always paginated on the server (max 100 per page). Search is debounced, and stale requests are cancelled with `AbortController`. Filter columns and `(employee_id, effective_date)` are indexed. Aggregates, including the median (via window functions, since SQLite has no `MEDIAN`), run in SQL. On the seeded data, the full dashboard summary takes ~175 ms and a filtered, salary-sorted page ~45 ms.
+- **Scale (10k rows).** Lists are always paginated on the server (max 100 per page). Search is debounced, and stale requests are cancelled with `AbortController`. Filter columns and `(employee_id, effective_date)` are indexed. Aggregates, including the median (via window functions, since SQLite has no `MEDIAN`), run in SQL. On the seeded data, a filtered, salary-sorted page takes ~57 ms and the full dashboard summary ~164 ms (see [`docs/performance.md`](docs/performance.md)).
 - **Safe AI.** The LLM never writes SQL and never sees employee data. It fills a typed `QuerySpec` (intent, metric, measure, filters, grouping, limit) through structured outputs. The executor resolves entity names against the database (an unknown name like "Legal" gets a clear reply instead of a query) and runs only whitelisted aggregations.
 - **Errors.** Services raise domain errors that map to 404/409/422, with messages such as `An employee with email … already exists`. The frontend shows field-level messages in forms, toasts for actions, and retryable banners for failed loads.
 
@@ -82,7 +97,7 @@ frontend/
 - **Exchange rates are static** seed values. There's no rate history, so historical USD figures use today's rate.
 - **The rule parser** is keyword-based: it handles the common question shapes (see suggestions in the UI) but not arbitrary phrasing. That's the job of the LLM path.
 - **No authentication or audit log.** Both are out of scope per `requirements.md`, but a real HR tool needs both.
-- **UI components** are a small hand-built kit (native `<dialog>`, Tailwind tokens with light/dark themes) instead of shadcn/ui, to avoid a CLI-generated dependency tree. The structure maps one-to-one if you want to swap it in.
+- **No frontend tests.** Backend unit tests cover the business logic; the UI is verified by type checking, lint, a production build and manual/screenshot checks. Component tests (Vitest + Testing Library) and a Playwright smoke test are the next step.
 
 ## API overview
 
