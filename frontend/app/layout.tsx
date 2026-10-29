@@ -4,6 +4,7 @@ import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import "./globals.css";
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <ThemeProvider defaultTheme="light">
-          <AppShell>{children}</AppShell>
+          <TooltipProvider delayDuration={150}>
+            <AppShell>{children}</AppShell>
+          </TooltipProvider>
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>
