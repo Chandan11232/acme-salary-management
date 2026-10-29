@@ -6,6 +6,7 @@ services:
     name: acme-pay-api
     runtime: python
     plan: free
+    region: singapore # closest Render region to India; fixed at creation
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: python -m scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
