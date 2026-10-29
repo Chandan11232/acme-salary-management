@@ -20,7 +20,7 @@ Salary management and analytics for ACME Corp's HR team: 10,000 employees across
 
 The visual language is an editorial "drafting sheet": warm paper, ink type and 1.5px rules, hard offset shadows, an orange accent and lilac panels, set in Inter Tight / Inter / JetBrains Mono. All of it is defined as shadcn/ui theme tokens in `frontend/app/globals.css`, so the primitives stay stock shadcn.
 
-shadcn/ui components in use: Card, Chart (Recharts), Table, Dialog, Alert Dialog, Sheet, Select, Tabs, Toggle Group, Avatar, Badge, Progress, Tooltip, Hover Card, Skeleton, Alert, Sonner, Input, Label, Separator, Scroll Area.
+shadcn/ui components in use: Card, Chart (Recharts), Table, Dialog, Alert Dialog, Sheet, Select, Tabs, Toggle Group, Avatar, Badge, Progress, Tooltip, Skeleton, Alert, Sonner, Input, Label, Separator.
 
 ## Artifacts
 
