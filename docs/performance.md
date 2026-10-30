@@ -12,7 +12,7 @@ The target is 10,000 employees (≈25,000 salary records with history). The guid
 | Dashboard aggregates | `SUM`/`AVG`/`COUNT` with `GROUP BY` in SQL; median via window functions — no rows are loaded into Python. |
 | Search-as-you-type | 300 ms debounce in the UI; every request carries an `AbortController` so superseded requests are cancelled and never render. |
 | Seeding | Bulk `INSERT` in batches of 2,000 — 10,000 employees + 25,092 salaries in ≈0.8 s. |
-| Tests | In-memory SQLite (`StaticPool`), fresh schema per test; 109 tests in ≈1 s. |
+| Tests | In-memory SQLite (`StaticPool`), fresh schema per test; 110 tests in ≈1 s. |
 
 ## Measured latency
 

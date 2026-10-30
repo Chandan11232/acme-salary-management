@@ -70,7 +70,7 @@ With a key, questions are parsed by Claude (`AI_MODEL`, default `claude-opus-5-5
 ## Tests
 
 ```bash
-cd backend && .venv/bin/python -m pytest     # 109 tests, ~1s, in-memory SQLite
+cd backend && .venv/bin/python -m pytest     # 110 tests, ~1s, in-memory SQLite
 cd frontend && npx tsc --noEmit && npm run lint
 ```
 
