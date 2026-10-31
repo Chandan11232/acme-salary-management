@@ -6,7 +6,7 @@ Salary management and analytics for ACME Corp's HR team: 10,000 employees across
 - **Frontend:** Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · shadcn/ui (`frontend/`)
 - **AI:** Claude via structured outputs (optional), with a deterministic rule-based parser as default and fallback
 
-**Live demo:** [acme-salary-management-teal.vercel.app](https://acme-salary-management-teal.vercel.app/) · **Video walkthrough:** _add link_
+**Live demo:** [acme-salary-management-teal.vercel.app](https://acme-salary-management-teal.vercel.app/) · **Video walkthrough:** [Google Drive](https://drive.google.com/file/d/1IpKr01k1AbciKAlCbv748h9g_v6LydRM/view?usp=drive_link)
 
 ## Screenshots
 
