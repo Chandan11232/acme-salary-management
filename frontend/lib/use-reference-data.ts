@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { api } from "@/lib/api";
+import { referenceData } from "@/lib/prefetch";
 import type { Country, Department } from "@/lib/types";
 
 interface ReferenceData {
@@ -16,7 +16,7 @@ export function useReferenceData(): ReferenceData {
   const [data, setData] = useState<ReferenceData>({ departments: [], countries: [], error: null });
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.departments(), api.countries()])
+    referenceData()
       .then(([departments, countries]) => !cancelled && setData({ departments, countries, error: null }))
       .catch((error: Error) => !cancelled && setData((prev) => ({ ...prev, error: error.message })));
     return () => {

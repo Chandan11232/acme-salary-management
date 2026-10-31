@@ -9,7 +9,7 @@ import { Logo } from "@/components/layout/logo";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/", label: "Dashboard" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/employees", label: "Employees" },
   { href: "/assistant", label: "Ask AI" },
 ];
@@ -18,7 +18,7 @@ const WRAP = "mx-auto w-[min(1240px,calc(100%-32px))]";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => pathname.startsWith(href);
 
   return (
     <div className="flex min-h-full flex-col">

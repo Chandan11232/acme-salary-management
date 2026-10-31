@@ -13,6 +13,7 @@ import { DepartmentCards } from "@/components/dashboard/department-cards";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { api } from "@/lib/api";
 import { formatCount, formatUsd, formatUsdCompact } from "@/lib/format";
+import { takePrefetchedSummary } from "@/lib/prefetch";
 import type { AnalyticsSummary } from "@/lib/types";
 import { useReferenceData } from "@/lib/use-reference-data";
 
@@ -26,13 +27,14 @@ export function DashboardView() {
 
   useEffect(() => {
     const controller = new AbortController();
-    api
-      .summary({ departmentId, countryId }, controller.signal)
+    const prefetched = departmentId === undefined && countryId === undefined ? takePrefetchedSummary() : null;
+    (prefetched ?? api.summary({ departmentId, countryId }, controller.signal))
       .then((data) => {
+        if (controller.signal.aborted) return;
         setSummary(data);
         setError(null);
       })
-      .catch((err: Error) => err.name !== "AbortError" && setError(err.message));
+      .catch((err: Error) => !controller.signal.aborted && err.name !== "AbortError" && setError(err.message));
     return () => controller.abort();
   }, [departmentId, countryId, reloadKey]);
 
